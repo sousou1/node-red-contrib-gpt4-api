@@ -1,0 +1,453 @@
+[
+    {
+        "id": "1986387b1a74d5a9",
+        "type": "tab",
+        "label": "自己増殖フロー",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "7c7f407e556b5ad1",
+        "type": "inject",
+        "z": "1986387b1a74d5a9",
+        "name": "フロー要件",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "temp.txtからファイルを読み込み、out.txtに出力する。",
+        "payloadType": "str",
+        "x": 120,
+        "y": 260,
+        "wires": [
+            [
+                "7c8de8c2784e66d5",
+                "77ba84ade07ff768"
+            ]
+        ]
+    },
+    {
+        "id": "7c8de8c2784e66d5",
+        "type": "gpt4-api",
+        "z": "1986387b1a74d5a9",
+        "name": "GPT-4 API",
+        "system_message": "Output JSON for Node-RED flow generation.\n\nIf you need to use gpt-4, please use the following my original nodes\n\nPackage Name: node-red-contrib-gpt4-api\nNode Name: gpt4-api\nDescription: A Node-RED plugin to interact with the OpenAI GPT-4 API in English.\n\nInput: msg.payload (user message)\nConfiguration: config.system_message (system message), config.api_key (API key), config.model (model name)\nOutput: msg.payload (response from GPT-4)",
+        "model": "gpt-4",
+        "topic": "",
+        "x": 410,
+        "y": 200,
+        "wires": [
+            [
+                "3a9016eaa3b3b056",
+                "c2a55ce4b2ec4bca",
+                "3c0b45653f6a1158"
+            ]
+        ]
+    },
+    {
+        "id": "3a9016eaa3b3b056",
+        "type": "debug",
+        "z": "1986387b1a74d5a9",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 560,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "2cb56895a81779d3",
+        "type": "debug",
+        "z": "1986387b1a74d5a9",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 440,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "8694820ee0f2d070",
+        "type": "gpt4-api",
+        "z": "1986387b1a74d5a9",
+        "name": "翻訳",
+        "system_message": "Please translate Japanese into English. At this time, please fill in any ambiguous parts as appropriate.",
+        "model": "gpt-4",
+        "x": 370,
+        "y": 120,
+        "wires": [
+            [
+                "2cb56895a81779d3"
+            ]
+        ]
+    },
+    {
+        "id": "c2a55ce4b2ec4bca",
+        "type": "function",
+        "z": "1986387b1a74d5a9",
+        "name": "Extract First Code Snippet",
+        "func": "const regex = /```(?:json)?\\n([\\s\\S]*?)\\n```/g;\nconst content = msg.payload;\n\nconst result = content.match(regex);\n\nif (result && result.length > 0) {\n  // Remove the markdown code block delimiters and language specifier\n  const cleanedResult = result[0].replace(/```(?:json)?\\n/, '').replace(/\\n```/, '');\n\n  // Replace newline characters with actual newlines\n  const formattedResult = cleanedResult.replace(/\\\\n/g, '\\n');\n\n  msg.payload = formattedResult;\n  return msg;\n} else {\n  return \"error!\";\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 200,
+        "wires": [
+            [
+                "01998f0a0122ef25",
+                "7780663351f02a54",
+                "eb8bf86942831917"
+            ]
+        ]
+    },
+    {
+        "id": "b73a3129c1fa6e51",
+        "type": "file",
+        "z": "1986387b1a74d5a9",
+        "name": "",
+        "filename": "filename",
+        "filenameType": "msg",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 1300,
+        "y": 200,
+        "wires": [
+            [
+                "f05f7ebbc8b488b8"
+            ]
+        ]
+    },
+    {
+        "id": "01998f0a0122ef25",
+        "type": "debug",
+        "z": "1986387b1a74d5a9",
+        "name": "debug 3",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 840,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "3c0b45653f6a1158",
+        "type": "file",
+        "z": "1986387b1a74d5a9",
+        "name": "",
+        "filename": "generated_flow.txt",
+        "filenameType": "str",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 650,
+        "y": 140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7780663351f02a54",
+        "type": "gpt4-api",
+        "z": "1986387b1a74d5a9",
+        "name": "Generate Title with GPT-4",
+        "system_message": "以下のNode-Redのフローに適切なファイル名と拡張子を考えて、以下のフォーマットで出力\n\nflow-{title_name}.{extension}",
+        "model": "gpt-3.5-turbo",
+        "topic": "",
+        "x": 570,
+        "y": 280,
+        "wires": [
+            [
+                "8a284415e99642fb"
+            ]
+        ]
+    },
+    {
+        "id": "04c67299bcf5a9d9",
+        "type": "function",
+        "z": "1986387b1a74d5a9",
+        "name": "function 1",
+        "func": "// Function node code\nvar new_msg = {\nfilename:null,\npayload:null\n}\n\nfor (var i = 0; i < msg.payload.length; i++) {\n    node.warn(\"msg.payload[i] \" + JSON.stringify(msg.payload[i]))\n    if (msg.payload[i].payload.topic === \"file_name\") {\n        new_msg.filename = msg.payload[i].payload.content;\n    } else if (msg.payload[i].payload.topic === \"file_content\") {\n        new_msg.payload = msg.payload[i].payload.content;\n    }\n}\n\nreturn new_msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1140,
+        "y": 200,
+        "wires": [
+            [
+                "b73a3129c1fa6e51",
+                "a101e76031ecade4"
+            ]
+        ]
+    },
+    {
+        "id": "a101e76031ecade4",
+        "type": "debug",
+        "z": "1986387b1a74d5a9",
+        "name": "debug filesave",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1280,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "f1a9e7f5d20e16c3",
+        "type": "debug",
+        "z": "1986387b1a74d5a9",
+        "name": "debug filename",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1020,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "83637e52dee0e6cc",
+        "type": "join",
+        "z": "1986387b1a74d5a9",
+        "name": "",
+        "mode": "custom",
+        "build": "array",
+        "property": "",
+        "propertyType": "full",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "accumulate": false,
+        "timeout": "",
+        "count": "2",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 1010,
+        "y": 200,
+        "wires": [
+            [
+                "04c67299bcf5a9d9",
+                "596a9444450679e8"
+            ]
+        ]
+    },
+    {
+        "id": "eb8bf86942831917",
+        "type": "function",
+        "z": "1986387b1a74d5a9",
+        "name": "set topic",
+        "func": "var new_msg = {\n    topic: null,\n    content: null\n};\nnew_msg.topic = \"file_content\";\nnew_msg.content = msg.payload;\nmsg.payload = new_msg\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 840,
+        "y": 200,
+        "wires": [
+            [
+                "b2735e653c85706e",
+                "83637e52dee0e6cc"
+            ]
+        ]
+    },
+    {
+        "id": "8a284415e99642fb",
+        "type": "function",
+        "z": "1986387b1a74d5a9",
+        "name": "set topic",
+        "func": "var new_msg = {\n    topic: null,\n    content: null\n};\nnew_msg.topic = \"file_name\";\nnew_msg.content = msg.payload;\nmsg.payload = new_msg\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 820,
+        "y": 280,
+        "wires": [
+            [
+                "f1a9e7f5d20e16c3",
+                "83637e52dee0e6cc"
+            ]
+        ]
+    },
+    {
+        "id": "b2735e653c85706e",
+        "type": "debug",
+        "z": "1986387b1a74d5a9",
+        "name": "debug 4",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1040,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "77ba84ade07ff768",
+        "type": "debug",
+        "z": "1986387b1a74d5a9",
+        "name": "start",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 310,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "596a9444450679e8",
+        "type": "debug",
+        "z": "1986387b1a74d5a9",
+        "name": "join",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1210,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "d991b70dda981a7b",
+        "type": "ui_text_input",
+        "z": "1986387b1a74d5a9",
+        "name": "",
+        "label": "入力",
+        "tooltip": "テキストを入力",
+        "group": "d74ca7a806351991",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "mode": "text",
+        "delay": 300,
+        "topic": "topic",
+        "sendOnBlur": true,
+        "className": "",
+        "topicType": "msg",
+        "x": 170,
+        "y": 100,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "f05f7ebbc8b488b8",
+        "type": "ui_text",
+        "z": "1986387b1a74d5a9",
+        "group": "d74ca7a806351991",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "",
+        "label": "Finish",
+        "format": "{{msg.filename}}",
+        "layout": "row-left",
+        "className": "",
+        "x": 1490,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "5924b8f8a2cd72ef",
+        "type": "ui_template",
+        "z": "1986387b1a74d5a9",
+        "group": "d74ca7a806351991",
+        "name": "",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "format": "<textarea id=\"inputTextArea\" ng-model=\"msg.payload\" style=\"width: 100%; height: 100px;\"></textarea>\n<button ng-click=\"msg.topic='template'; send(msg)\">送信</button>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": false,
+        "templateScope": "local",
+        "className": "",
+        "x": 200,
+        "y": 180,
+        "wires": [
+            [
+                "7c8de8c2784e66d5"
+            ]
+        ]
+    },
+    {
+        "id": "d74ca7a806351991",
+        "type": "ui_group",
+        "name": "GPT-manager",
+        "tab": "632568738f1437d2",
+        "order": 1,
+        "disp": true,
+        "width": "30",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "632568738f1437d2",
+        "type": "ui_tab",
+        "name": "ホーム",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]

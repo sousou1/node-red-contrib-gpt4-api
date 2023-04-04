@@ -1,0 +1,50 @@
+<script type="text/x-red" data-template-name="gpt4-api">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-system_message"><i class="icon-tag"></i> System Message</label>
+        <textarea id="node-input-system_message" placeholder="System Message" rows="5"></textarea>
+    </div>
+    <div class="form-row">
+        <label for="node-input-model"><i class="icon-tag"></i> Model</label>
+        <input type="text" id="node-input-model" placeholder="Model">
+    </div>
+    <!-- 追加: msg.topic フィールド -->
+    <div class="form-row">
+        <label for="node-input-topic"><i class="icon-tag"></i> Topic</label>
+        <input type="text" id="node-input-topic" placeholder="Topic">
+    </div>
+</script>
+
+<script type="text/javascript">
+    RED.nodes.registerType("gpt4-api", {
+        category: "function",
+        color: "#a6bbcf",
+        defaults: {
+            name: { value: "" },
+            system_message: { value: "" },
+            model: { value: "" },
+            topic: { value: "" }, // 追加: topic プロパティ
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "file.png",
+        label: function () {
+            return this.name || "gpt4-api";
+        },
+        oneditprepare: function () {
+            $("#node-input-name").val(this.name);
+            $("#node-input-system_message").val(this.system_message);
+            $("#node-input-model").val(this.model);
+            $("#node-input-topic").val(this.topic); // 追加: topic 値を設定
+        },
+        oneditsave: function () {
+            this.name = $("#node-input-name").val();
+            this.system_message = $("#node-input-system_message").val();
+            this.model = $("#node-input-model").val();
+            this.topic = $("#node-input-topic").val(); // 追加: topic 値を保存
+        },
+    });
+</script>

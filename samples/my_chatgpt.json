@@ -1,0 +1,376 @@
+[
+    {
+        "id": "c4d0cc8616dd6340",
+        "type": "tab",
+        "label": "My_ChatGPT",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "cfaf3911c33b5871",
+        "type": "gpt4-api",
+        "z": "c4d0cc8616dd6340",
+        "name": "GPT-4 API",
+        "system_message": "質問に対して、その分野のプロフェッショナルのように返答してください。\n\n以下、これまで私(user)とあなた(assistant)の会話の履歴を以下のフォーマットで記述していきます。\nuser : \nassistant : ",
+        "model": "gpt-3.5-turbo",
+        "topic": "gpt",
+        "x": 1070,
+        "y": 60,
+        "wires": [
+            [
+                "4d7305489a8cb579"
+            ]
+        ]
+    },
+    {
+        "id": "7a6d05e14bd3d5ce",
+        "type": "ui_template",
+        "z": "c4d0cc8616dd6340",
+        "group": "dc57280aa50e9cef",
+        "name": "",
+        "order": 4,
+        "width": 0,
+        "height": 0,
+        "format": "<div ng-init=\"inputText = ''\">\n    <textarea id=\"inputTextArea\" ng-model=\"inputText\" style=\"width: 100%; height: 100px;\"></textarea>\n    <button ng-click=\"send({payload: inputText, topic: 'template'}); inputText = ''\" style=\"width: 100%; height: 30px;\">送信</button>\n</div>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": false,
+        "templateScope": "local",
+        "className": "",
+        "x": 80,
+        "y": 60,
+        "wires": [
+            [
+                "c60457be523058a5"
+            ]
+        ]
+    },
+    {
+        "id": "25487043d1d3b783",
+        "type": "ui_text",
+        "z": "c4d0cc8616dd6340",
+        "group": "dc57280aa50e9cef",
+        "order": 5,
+        "width": 12,
+        "height": 19,
+        "name": "",
+        "label": "Chat",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "className": "",
+        "x": 1030,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "c60457be523058a5",
+        "type": "function",
+        "z": "c4d0cc8616dd6340",
+        "name": "チャットを結合",
+        "func": "if (msg.topic === \"reset\") {\n    context.set('previousValue', \"\");\n    return msg;\n}\n\n// 前回の値をcontextから取得\nlet previousValue = context.get('previousValue') || \"\";\n\n// 現在の値をメッセージから取得\nlet currentValue = \"\";\nif (msg.topic === \"template\") {\n    currentValue = \"user : \" + msg.payload;\n    msg.topic = \"user\"\n} else {\n    currentValue = \"assistant : \" + msg.payload;\n    msg.topic = \"assistant\"\n}\n\n// 前回の値と現在のフォーマット済みの値を結合\ncurrentValue = previousValue + \"\\n\\n\" + currentValue;\n\n// 現在の値を前回の値としてcontextに保存\ncontext.set('previousValue', currentValue);\n\n// フォーマット済みの結果をペイロードに設定し、次のノードに送信\nmsg.payload = currentValue;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 60,
+        "wires": [
+            [
+                "6c3458550808c99b",
+                "624c543b5265bfd2",
+                "fe5e39598f17f646"
+            ]
+        ]
+    },
+    {
+        "id": "4d7305489a8cb579",
+        "type": "function",
+        "z": "c4d0cc8616dd6340",
+        "name": "gptトピックを設定し、フォーマットを修正",
+        "func": "msg.topic = \"gpt\"\nif (msg.payload.startsWith(\"assistant : \")) {\n    msg.payload = msg.payload.substring(\"assistant : \".length);\n}\nif (msg.payload.startsWith(\"assistant:\")) {\n    msg.payload = msg.payload.substring(\"assistant:\".length);\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1370,
+        "y": 60,
+        "wires": [
+            [
+                "c60457be523058a5"
+            ]
+        ]
+    },
+    {
+        "id": "6db78c558b1a5643",
+        "type": "ui_button",
+        "z": "c4d0cc8616dd6340",
+        "name": "",
+        "group": "dc57280aa50e9cef",
+        "order": 1,
+        "width": 2,
+        "height": 1,
+        "passthru": false,
+        "label": "Reset",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": " ",
+        "payloadType": "str",
+        "topic": "reset",
+        "topicType": "str",
+        "x": 70,
+        "y": 120,
+        "wires": [
+            [
+                "c60457be523058a5"
+            ]
+        ]
+    },
+    {
+        "id": "6c3458550808c99b",
+        "type": "function",
+        "z": "c4d0cc8616dd6340",
+        "name": "改行をブラウザ用にフォーマット",
+        "func": "// 現在の値をメッセージから取得\nlet currentValue = msg.payload;\n\nconst formattedResult = currentValue.replace(/\\n/g, '<br>');\n\nmsg.payload = formattedResult;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 120,
+        "wires": [
+            [
+                "25487043d1d3b783"
+            ]
+        ]
+    },
+    {
+        "id": "624c543b5265bfd2",
+        "type": "function",
+        "z": "c4d0cc8616dd6340",
+        "name": "ユーザー入力の時以外動かないようにする",
+        "func": "if (msg.topic === \"user\") {\n    return msg;\n}\n\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 60,
+        "wires": [
+            [
+                "cfaf3911c33b5871"
+            ]
+        ]
+    },
+    {
+        "id": "f883d819c691bcd8",
+        "type": "ui_button",
+        "z": "c4d0cc8616dd6340",
+        "name": "",
+        "group": "dc57280aa50e9cef",
+        "order": 2,
+        "width": 2,
+        "height": 1,
+        "passthru": false,
+        "label": "Save",
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "save_button",
+        "topicType": "str",
+        "x": 470,
+        "y": 200,
+        "wires": [
+            [
+                "fe5e39598f17f646"
+            ]
+        ]
+    },
+    {
+        "id": "fe5e39598f17f646",
+        "type": "function",
+        "z": "c4d0cc8616dd6340",
+        "name": "ボタンが押されたら、適切な名前でセーブ",
+        "func": "if (msg.topic === \"save_button\") {\n    msg.payload = context.get('text_input') || \"\";\n    return msg;\n} else {\n    context.set('text_input', msg.payload);\n    return null;\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 200,
+        "wires": [
+            [
+                "2b1839c290d9cb77",
+                "a9b1315c38143e69"
+            ]
+        ]
+    },
+    {
+        "id": "a9b1315c38143e69",
+        "type": "gpt4-api",
+        "z": "c4d0cc8616dd6340",
+        "name": "Generate Title",
+        "system_message": "以下のテキストに適切なファイル名を考えて、以下のフォーマットで出力\n\n{title_name}.txt",
+        "model": "gpt-3.5-turbo",
+        "topic": "",
+        "x": 1080,
+        "y": 280,
+        "wires": [
+            [
+                "6ad29cbba6e245ba"
+            ]
+        ]
+    },
+    {
+        "id": "6ad29cbba6e245ba",
+        "type": "function",
+        "z": "c4d0cc8616dd6340",
+        "name": "set topic",
+        "func": "var new_msg = {\n    topic: null,\n    content: null\n};\nvar today = new Date();\nvar year = today.getFullYear();\nvar month = (\"0\" + (today.getMonth() + 1)).slice(-2);\nvar day = (\"0\" + today.getDate()).slice(-2);\nvar hour = (\"0\" + today.getHours()).slice(-2);\nvar minute = (\"0\" + today.getMinutes()).slice(-2);\n\nvar fileHead = year + month + day + \"-\" + hour + minute;\n\nnew_msg.topic = \"file_name\";\nnew_msg.content = fileHead + \"-\" + msg.payload;\nmsg.payload = new_msg\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1260,
+        "y": 280,
+        "wires": [
+            [
+                "335ba6d0fd1896f5"
+            ]
+        ]
+    },
+    {
+        "id": "2b1839c290d9cb77",
+        "type": "function",
+        "z": "c4d0cc8616dd6340",
+        "name": "set topic",
+        "func": "var new_msg = {\n    topic: null,\n    content: null\n};\nnew_msg.topic = \"file_content\";\nnew_msg.content = msg.payload;\nmsg.payload = new_msg\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1160,
+        "y": 200,
+        "wires": [
+            [
+                "335ba6d0fd1896f5"
+            ]
+        ]
+    },
+    {
+        "id": "335ba6d0fd1896f5",
+        "type": "join",
+        "z": "c4d0cc8616dd6340",
+        "name": "",
+        "mode": "custom",
+        "build": "array",
+        "property": "",
+        "propertyType": "full",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "accumulate": false,
+        "timeout": "",
+        "count": "2",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 1330,
+        "y": 200,
+        "wires": [
+            [
+                "0370e4e03bfd2e27"
+            ]
+        ]
+    },
+    {
+        "id": "0370e4e03bfd2e27",
+        "type": "function",
+        "z": "c4d0cc8616dd6340",
+        "name": "function 4",
+        "func": "// Function node code\nvar new_msg = {\nfilename:null,\npayload:null\n}\n\nfor (var i = 0; i < msg.payload.length; i++) {\n    node.warn(\"msg.payload[i] \" + JSON.stringify(msg.payload[i]))\n    if (msg.payload[i].payload.topic === \"file_name\") {\n        new_msg.filename = msg.payload[i].payload.content;\n    } else if (msg.payload[i].payload.topic === \"file_content\") {\n        new_msg.payload = msg.payload[i].payload.content;\n    }\n}\n\nreturn new_msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1500,
+        "y": 200,
+        "wires": [
+            [
+                "8198a0389e7158a5"
+            ]
+        ]
+    },
+    {
+        "id": "8198a0389e7158a5",
+        "type": "file",
+        "z": "c4d0cc8616dd6340",
+        "name": "",
+        "filename": "filename",
+        "filenameType": "msg",
+        "appendNewline": true,
+        "createDir": false,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 1660,
+        "y": 200,
+        "wires": [
+            [
+                "ab29dce680d7dc11"
+            ]
+        ]
+    },
+    {
+        "id": "ab29dce680d7dc11",
+        "type": "ui_text",
+        "z": "c4d0cc8616dd6340",
+        "group": "dc57280aa50e9cef",
+        "order": 3,
+        "width": 8,
+        "height": 1,
+        "name": "",
+        "label": "save to",
+        "format": "{{msg.filename}}",
+        "layout": "row-left",
+        "className": "",
+        "x": 1860,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "dc57280aa50e9cef",
+        "type": "ui_group",
+        "name": "MyGPT",
+        "tab": "142d21e097c8ecfd",
+        "order": 2,
+        "disp": true,
+        "width": 12,
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "142d21e097c8ecfd",
+        "type": "ui_tab",
+        "name": "My GPT",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
