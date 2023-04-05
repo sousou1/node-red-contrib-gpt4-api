@@ -303,14 +303,14 @@
         "id": "0370e4e03bfd2e27",
         "type": "function",
         "z": "c4d0cc8616dd6340",
-        "name": "function 4",
+        "name": "配列で来る入力を適切に再配置",
         "func": "// Function node code\nvar new_msg = {\nfilename:null,\npayload:null\n}\n\nfor (var i = 0; i < msg.payload.length; i++) {\n    node.warn(\"msg.payload[i] \" + JSON.stringify(msg.payload[i]))\n    if (msg.payload[i].payload.topic === \"file_name\") {\n        new_msg.filename = msg.payload[i].payload.content;\n    } else if (msg.payload[i].payload.topic === \"file_content\") {\n        new_msg.payload = msg.payload[i].payload.content;\n    }\n}\n\nreturn new_msg;",
         "outputs": 1,
         "noerr": 0,
         "initialize": "",
         "finalize": "",
         "libs": [],
-        "x": 1500,
+        "x": 1570,
         "y": 200,
         "wires": [
             [
@@ -329,7 +329,7 @@
         "createDir": false,
         "overwriteFile": "true",
         "encoding": "none",
-        "x": 1660,
+        "x": 1800,
         "y": 200,
         "wires": [
             [
@@ -350,7 +350,7 @@
         "format": "{{msg.filename}}",
         "layout": "row-left",
         "className": "",
-        "x": 1860,
+        "x": 1960,
         "y": 200,
         "wires": []
     },
