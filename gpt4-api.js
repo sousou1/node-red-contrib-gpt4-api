@@ -14,7 +14,7 @@ module.exports = function (RED) {
         node.on('input', function (msg) {
             const input_message = msg.payload;
             const system_message = config.system_message;
-            const api_key = node.context().global.get('gpt4_api_key'); 
+            const api_key = node.context().global.get('gpt4_api_key');
             const model = config.model;
             msg.topic = config.topic;
 
@@ -24,8 +24,8 @@ module.exports = function (RED) {
             const instance = axios.create({
                 baseURL: 'https://api.openai.com/v1/chat/completions',
                 headers: { 'Authorization': 'Bearer ' + api_key },
-                httpsAgent: agent, // 追加: プロキシ設定を追加
-                proxy: false // 追加: デフォルトのプロキシ設定を無効にする
+                httpsAgent: agent,
+                proxy: false
             });
 
             const requestData = {

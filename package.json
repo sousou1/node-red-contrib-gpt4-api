@@ -1,7 +1,7 @@
 {
   "name": "node-red-contrib-gpt4-api",
   "version": "1.0.0",
-  "description": "Node-RED plugin to interact with OpenAI GPT-4 API",
+  "description": "Node-RED plugin to interact with OpenAI API",
   "main": "gpt4-api.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -18,5 +18,7 @@
   },
   "dependencies": {
     "axios": "^0.26.1"
-  }
+  },
+  "author": "So Tamura",
+  "license": "Apache-2.0"
 }
