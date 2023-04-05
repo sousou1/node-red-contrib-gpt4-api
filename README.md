@@ -66,7 +66,7 @@ API-KEYを https://platform.openai.com/account/api-keys から取得し、なん
 functionGlobalContext: {
         gpt4_api_key: "apiキーを書いて""で囲む"
 ```
-というようにペーストしてください。
+というようにAPI-Keyを記述してください。
 
 次に、Node-REDエディタでのgpt4-apiノードの設定です。Node-REDエディタでgpt4-apiノードをクリックすると、以下のような設定項目が出てきます。このうち、System MessageおよびModelはかならず入力してください。
 ```
