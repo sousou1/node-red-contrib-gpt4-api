@@ -68,7 +68,7 @@ functionGlobalContext: {
 ```
 というようにペーストしてください。
 
-次に、Node-REDエディタでのgpt4-apiノードの設定です。
+次に、Node-REDエディタでのgpt4-apiノードの設定です。Node-REDエディタでgpt4-apiノードをクリックすると、以下のような設定項目が出てきます。このうち、System MessageおよびModelはかならず入力してください。
 ```
 Name ：エディタ上で表示される名前
 System Message ：APIに設定する基本的な命令。（例：質問に対して、その分野のプロフェッショナルのように返答してください。）
