@@ -1,11 +1,7 @@
-<script type="text/x-red" data-template-name="gpt4-api">
+<script type="text/x-red" data-template-name="continue-gpt4-api">
     <div class="form-row">
         <label for="node-input-name"><i class="icon-tag"></i> Name</label>
         <input type="text" id="node-input-name" placeholder="Name">
-    </div>
-    <div class="form-row">
-        <label for="node-input-system_message"><i class="icon-tag"></i> System Message</label>
-        <textarea id="node-input-system_message" placeholder="System Message" rows="5"></textarea>
     </div>
     <div class="form-row">
         <label for="node-input-model"><i class="icon-tag"></i> Model</label>
@@ -50,7 +46,7 @@
     </div>
 </script>
 <script type="text/javascript">
-    RED.nodes.registerType("gpt4-api", {
+    RED.nodes.registerType("continue-gpt4-api", {
         category: "function",
         color: "#a6bbcf",
         defaults: {
@@ -71,7 +67,7 @@
         outputs: 1,
         icon: "file.png",
         label: function () {
-            return this.name || "gpt4-api";
+            return this.name || "continue-gpt4-api";
         },
         oneditprepare: function () {
             $("#node-input-name").val(this.name);

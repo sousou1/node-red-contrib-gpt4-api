@@ -1,6 +1,6 @@
 {
   "name": "node-red-contrib-gpt4-api",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Node-RED plugin to interact with OpenAI API",
   "main": "gpt4-api.js",
   "scripts": {
@@ -13,7 +13,8 @@
   ],
   "node-red": {
     "nodes": {
-      "gpt4-api": "gpt4-api.js"
+      "gpt4-api": "gpt4-api.js",
+      "continue-gpt4-api": "continue-gpt4-api.js"
     }
   },
   "dependencies": {

@@ -1,11 +1,9 @@
 module.exports = function (RED) {
     const axios = require('axios');
-
-    // for proxy
     const HttpProxyAgent = require('http-proxy-agent');
     const HttpsProxyAgent = require('https-proxy-agent');
 
-    function GPT4APINode(config) {
+    function ContinueGPT4APINode(config) {
         RED.nodes.createNode(this, config);
         const httpProxy = process.env.HTTP_PROXY || process.env.http_proxy;
         const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy;
@@ -36,12 +34,17 @@ module.exports = function (RED) {
                 proxy: false
             });
 
+            // Use chat_history as messages if available, otherwise use the system message
+            const messages = msg.chat_history ? msg.chat_history : [
+                { "role": "system", "content": system_message },
+            ];
+
+            // Add user message to messages
+            messages.push({ "role": "user", "content": input_message });
+
             const requestData = {
                 "model": model,
-                "messages": [
-                    { "role": "system", "content": system_message },
-                    { "role": "user", "content": input_message }
-                ],
+                "messages": messages,
                 "temperature": parseFloat(temperature),
                 "top_p": parseFloat(top_p),
                 "n": 1,
@@ -61,18 +64,12 @@ module.exports = function (RED) {
 
             instance.post('', requestData)
                 .then(function (response) {
-                    msg.payload = response.data.choices[0].message.content;
+                    const output_message = response.data.choices[0].message.content;
+                    msg.payload = output_message;
 
-                    // Add the user message and system response to chat_history
-                    if (!msg.chat_history) {
-                        msg.chat_history = [
-                            { "role": "system", "content": system_message },
-                            { "role": "user", "content": input_message },
-                        ];
-                    } else {
-                        msg.chat_history.push({ "role": "user", "content": input_message });
-                    }
-                    msg.chat_history.push({ "role": "assistant", "content": msg.payload });
+                    // Add system response to chat history and update msg.chat_history
+                    messages.push({ "role": "assistant", "content": output_message });
+                    msg.chat_history = messages;
 
                     node.send(msg);
                 })
@@ -82,5 +79,5 @@ module.exports = function (RED) {
         });
     }
 
-    RED.nodes.registerType('gpt4-api', GPT4APINode);
+    RED.nodes.registerType('continue-gpt4-api', ContinueGPT4APINode);
 };
