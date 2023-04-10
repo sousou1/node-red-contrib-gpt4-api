@@ -60,7 +60,7 @@
             topic: { value: "" },
             temperature: { value: 1 },
             top_p: { value: 1 },
-            max_tokens: { value: 3900 },
+            max_tokens: { value: 0 },
             stream: { value: false },
             presence_penalty: { value: 0 },
             frequency_penalty: { value: 0 },
@@ -80,7 +80,7 @@
             $("#node-input-topic").val(this.topic || "gpt");
             $("#node-input-temperature").val(this.temperature || 1);
             $("#node-input-top_p").val(this.top_p || 1);
-            $("#node-input-max_tokens").val(this.max_tokens || 3900);
+            $("#node-input-max_tokens").val(this.max_tokens || 0);
             $("#node-input-stream").prop("checked", this.stream || false);
             $("#node-input-presence_penalty").val(this.presence_penalty || 0);
             $("#node-input-frequency_penalty").val(this.frequency_penalty || 0);

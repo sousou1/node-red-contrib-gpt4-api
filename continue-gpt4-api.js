@@ -11,7 +11,6 @@ module.exports = function (RED) {
 
         node.on('input', function (msg) {
             const input_message = msg.payload;
-            const system_message = config.system_message;
             const api_key = node.context().global.get('gpt4_api_key');
             const model = config.model;
             msg.topic = config.topic;
@@ -35,9 +34,7 @@ module.exports = function (RED) {
             });
 
             // Use chat_history as messages if available, otherwise use the system message
-            const messages = msg.chat_history ? msg.chat_history : [
-                { "role": "system", "content": system_message },
-            ];
+            const messages = msg.chat_history;
 
             // Add user message to messages
             messages.push({ "role": "user", "content": input_message });
@@ -48,11 +45,14 @@ module.exports = function (RED) {
                 "temperature": parseFloat(temperature),
                 "top_p": parseFloat(top_p),
                 "n": 1,
-                "max_tokens": parseInt(max_tokens),
                 "stream": JSON.parse(stream),
                 "presence_penalty": parseFloat(presence_penalty),
                 "frequency_penalty": parseFloat(frequency_penalty),
             };
+
+            if (parseInt(max_tokens) > 0) {
+                requestData["max_tokens"] = parseInt(max_tokens);
+            }
 
             if (logit_bias) {
                 requestData["logit_bias"] = JSON.parse(logit_bias);

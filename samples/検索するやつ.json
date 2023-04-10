@@ -1,0 +1,508 @@
+[
+    {
+        "id": "8fe091d38d855dd7",
+        "type": "tab",
+        "label": "検索するやつ",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "c5ebbfbfbc78a968",
+        "type": "function",
+        "z": "8fe091d38d855dd7",
+        "name": "to array",
+        "func": "const input = msg.payload;\n\nconst lines = input.split('\\n').filter(line => line.startsWith('en') || line.startsWith('jp'));\n\nfunction generateCombinations(word) {\n    const words = [];\n    const spaces = word.match(/\\s+/g);\n\n    if (!spaces) {\n        return [word];\n    }\n\n    const spaceCombinations = spaces.reduce((combinations, space) => {\n        const newCombinations = [];\n        combinations.forEach(combination => {\n            newCombinations.push([...combination, ' ']);\n            newCombinations.push([...combination, '_']);\n            newCombinations.push([...combination, '']);\n        });\n        return newCombinations;\n    }, [[]]);\n\n    spaceCombinations.forEach(spaceCombination => {\n        let index = 0;\n        let combinedWord = '';\n        word.split(/\\s+/).forEach(part => {\n            combinedWord += part + (spaceCombination[index] || '');\n            index++;\n        });\n        words.push(combinedWord);\n    });\n\n    return words;\n}\n\nfor (const line of lines) {\n    const [lang_prefix, terms] = line.split(':');\n    const lang = lang_prefix.substring(0, 2); // Extract the first two characters ('jp' or 'en')\n    const words = terms.split(/,|、/).map(word => word.trim());\n\n    for (const word of words) {\n        const variations = generateCombinations(word);\n\n        variations.forEach(variation => {\n            node.send({ payload: { lang: lang, term: variation } });\n        });\n    }\n}",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 880,
+        "y": 500,
+        "wires": [
+            [
+                "299493f144e55a70",
+                "6f0641e361f90570"
+            ]
+        ]
+    },
+    {
+        "id": "dd967c0685cd5fbc",
+        "type": "gpt4-api",
+        "z": "8fe091d38d855dd7",
+        "name": "GPT-4 API",
+        "system_message": "ユーザーからの入力に含まれる固有名詞に関して、その正式な名称を一覧にしてください。次に、それを英語と日本語にして出力してください、\n\n一覧にするフォーマットは以下のようにし、余計な文章は不要です。\n\n正式名称：word1の正式な名称, word2の正式な名称, word3の正式な名称, etc...\n\nen:word1, word2, word3, etc...\n\njp:word1, word2, word3, etc...\n",
+        "model": "gpt-3.5-turbo",
+        "topic": "gpt",
+        "temperature": "1",
+        "top_p": "0.05",
+        "max_tokens": "0",
+        "stream": false,
+        "presence_penalty": "0",
+        "frequency_penalty": "0",
+        "logit_bias": "",
+        "stop": "",
+        "x": 630,
+        "y": 500,
+        "wires": [
+            [
+                "2b9524c2931ec6d6",
+                "c5ebbfbfbc78a968"
+            ]
+        ]
+    },
+    {
+        "id": "bef01b15445f434f",
+        "type": "inject",
+        "z": "8fe091d38d855dd7",
+        "name": "question",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "question",
+        "payload": "ソニーのPSVR2の発売日はいつ？",
+        "payloadType": "str",
+        "x": 180,
+        "y": 400,
+        "wires": [
+            [
+                "dd967c0685cd5fbc",
+                "1b448e70148e337e",
+                "4c162ad701b40b05",
+                "03590dbe509e7879",
+                "aa3afe5656598c47"
+            ]
+        ]
+    },
+    {
+        "id": "2b9524c2931ec6d6",
+        "type": "debug",
+        "z": "8fe091d38d855dd7",
+        "name": "debug 15",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 820,
+        "y": 400,
+        "wires": []
+    },
+    {
+        "id": "299493f144e55a70",
+        "type": "function",
+        "z": "8fe091d38d855dd7",
+        "name": "Create JP SPARQL Query",
+        "func": "if (msg.payload.lang != \"jp\") {\n    return null;\n}\n\n\nvar encodedKeyword = encodeURIComponent(msg.payload.term);\n\nmsg.url = `https://ja.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&explaintext=&titles=${encodedKeyword}`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 750,
+        "y": 660,
+        "wires": [
+            [
+                "c224c41c61316345"
+            ]
+        ]
+    },
+    {
+        "id": "c224c41c61316345",
+        "type": "http request",
+        "z": "8fe091d38d855dd7",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 970,
+        "y": 660,
+        "wires": [
+            [
+                "023bdb932948052d"
+            ]
+        ]
+    },
+    {
+        "id": "023bdb932948052d",
+        "type": "function",
+        "z": "8fe091d38d855dd7",
+        "name": "Extract Results",
+        "func": "const data = JSON.parse(msg.payload);\n\nconst pages = data.query.pages;\nconst pageId = Object.keys(pages)[0];\nconst pageTitle = pages[pageId].title;\nconst pageContent = pages[pageId].extract;\n\nmsg.payload = {\n    title: pageTitle,\n    content: pageContent\n};\nmsg.topic = \"body\"\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1200,
+        "y": 660,
+        "wires": [
+            [
+                "1b448e70148e337e"
+            ]
+        ]
+    },
+    {
+        "id": "1b448e70148e337e",
+        "type": "function",
+        "z": "8fe091d38d855dd7",
+        "name": "Make prompt",
+        "func": "if (msg.topic === \"question\") {\n    context.set('question', msg.payload);\n    return null;\n}\nlet question = context.get('question') || \"\";\nlet title = msg.payload.title;\nconst content = msg.payload.content || \"\";\n\n// 長すぎるので分割して送信\nconst parts = content.split('\\n\\n\\n==');\n\nfor (const part of parts) {\n    if (300 < part.length && part.length < 900) {\n        let send_message =\n            \"question:\" + question + \"\\n\" + \"wiki title:\" + title + \"\\n\" + \"wiki content:\" + part;\n        node.send({ payload: send_message, lengthcount: part.length });\n    }\n    if (part.lentgh <= 900) {\n        const parts2 = part.split('\\n\\n\\n===');\n        for (const part2 of parts2) {\n            if (300 < part2.length) {\n                let send_message =\n                    \"question:\" + question + \"\\n\" + \"wiki title:\" + title + \"\\n\" + \"wiki content:\" + part2;\n                node.send({ payload: send_message, title: title, lengthcount: part2.length });\n            }\n        }\n    }\n}\n\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1490,
+        "y": 660,
+        "wires": [
+            [
+                "44f32e84aa0c5154"
+            ]
+        ]
+    },
+    {
+        "id": "6f0641e361f90570",
+        "type": "function",
+        "z": "8fe091d38d855dd7",
+        "name": "Create EN SPARQL Query",
+        "func": "if (msg.payload.lang != \"en\") {\n    return null;\n}\n\nvar encodedKeyword = encodeURIComponent(msg.payload.term);\n\nmsg.url = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts&format=json&explaintext=&titles=${encodedKeyword}`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 740,
+        "y": 860,
+        "wires": [
+            [
+                "759d432cf9f2e9a7"
+            ]
+        ]
+    },
+    {
+        "id": "759d432cf9f2e9a7",
+        "type": "http request",
+        "z": "8fe091d38d855dd7",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1050,
+        "y": 860,
+        "wires": [
+            [
+                "6f0db278985e62de"
+            ]
+        ]
+    },
+    {
+        "id": "6f0db278985e62de",
+        "type": "function",
+        "z": "8fe091d38d855dd7",
+        "name": "Extract Results",
+        "func": "const data = JSON.parse(msg.payload);\n\nconst pages = data.query.pages;\nconst pageId = Object.keys(pages)[0];\nconst pageTitle = pages[pageId].title;\nconst pageContent = pages[pageId].extract;\n\nmsg.payload = {\n    title: pageTitle,\n    content: pageContent\n};\nmsg.topic = \"body\"\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1280,
+        "y": 860,
+        "wires": [
+            [
+                "4c162ad701b40b05"
+            ]
+        ]
+    },
+    {
+        "id": "4c162ad701b40b05",
+        "type": "function",
+        "z": "8fe091d38d855dd7",
+        "name": "Make prompt",
+        "func": "if (msg.topic === \"question\") {\n    context.set('question', msg.payload);\n    return null;\n}\nlet question = context.get('question') || \"\";\nlet title = msg.payload.title;\n\nconst content = msg.payload.content || \"\";\n\n// 長すぎるので分割して送信\nconst parts = content.split('\\n\\n\\n==');\n\nfor (const part of parts) {\n    if (300 < part.length && part.length < 2000) {\n        let send_message =\n            \"question:\" + question + \"\\n\" + \"wiki title:\" + title + \"\\n\" + \"wiki content:\" + part;\n        node.send({ payload: send_message, lengthcount: part.length });\n    }\n    if (part.lentgh < 4000) {\n        const parts2 = part.split('\\n\\n\\n===');\n        for (const part2 of parts2) {\n            if (300 < part2.length) {\n                let send_message =\n                    \"question:\" + question + \"\\n\" + \"wiki title:\" + title + \"\\n\" + \"wiki content:\" + part2;\n                node.send({ payload: send_message, title: title, lengthcount: part2.length });\n            }\n        }\n    }\n}\n\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1510,
+        "y": 860,
+        "wires": [
+            [
+                "c29ab164e9d30f49"
+            ]
+        ]
+    },
+    {
+        "id": "c29ab164e9d30f49",
+        "type": "gpt4-api",
+        "z": "8fe091d38d855dd7",
+        "name": "GPT-4 API",
+        "system_message": "あなたはプロのコンサルタントです。以下のWikipedia記事の一部から、最新の情報であなたの学習データに存在しない情報のみを箇条書きで抜粋してください。データ量を圧縮したいため、不要な内容は削減してください。あなたが知っている情報ばかりだったり、2020年以降と思わしき情報が無い場合は、返答不要です。\n\n出力フォーマットは、以下のようにすべて箇条書きです。\n\nif(既知の情報のみの場合 or 最新情報が無い場合) {\n私はこの内容をすべて知っています。\n}\nelse {\n{記事のタイトル}に関して私が未知の情報は次の通りです。\n・情報１\n・情報２\n}",
+        "model": "gpt-3.5-turbo",
+        "topic": "gpt",
+        "temperature": "1",
+        "top_p": "1",
+        "max_tokens": "0",
+        "stream": false,
+        "presence_penalty": "0",
+        "frequency_penalty": "0",
+        "logit_bias": "",
+        "stop": "",
+        "x": 1750,
+        "y": 860,
+        "wires": [
+            [
+                "5fb247dbbc056289",
+                "9a562bf143ee4948"
+            ]
+        ]
+    },
+    {
+        "id": "03590dbe509e7879",
+        "type": "function",
+        "z": "8fe091d38d855dd7",
+        "name": "Reset",
+        "func": "msg.payload = \"reset\"\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 890,
+        "y": 340,
+        "wires": [
+            [
+                "5fb247dbbc056289"
+            ]
+        ]
+    },
+    {
+        "id": "5fb247dbbc056289",
+        "type": "function",
+        "z": "8fe091d38d855dd7",
+        "name": "merge",
+        "func": "// 初期状態\nlet active = context.get(\"active\") || false;\nlet concatenatedPayloads = context.get(\"concatenatedPayloads\") || \"\";\nlet timeout = context.get(\"timeout\") || null;\n\n// リセットメッセージの処理\nif (msg.payload === \"reset\") {\n    active = false;\n    concatenatedPayloads = \"\";\n    context.set(\"active\", active);\n    context.set(\"concatenatedPayloads\", concatenatedPayloads);\n    if (timeout) {\n        clearTimeout(timeout);\n        context.set(\"timeout\", null);\n    }\n    return;\n}\n\n// 現在の値をメッセージから取得\nlet currentValue = msg.payload;\n\n// 特定の値をremove\nconst phrasesToRemove = ['未知の情報', '私はこの内容を'];\n\n// テキストを行ごとに分割\nconst lines = currentValue.split('\\n');\n\n// 指定されたフレーズを含まない行だけをフィルタリング\nconst filteredLines = lines.filter(line => {\n    return !phrasesToRemove.some(phrase => line.includes(phrase));\n});\n\n// フィルタリングされた行を結合して新しいテキストを作成\nconst newText = filteredLines.join('\\n');\n\n// メッセージの連結\nif(newText != \"\"){\n    concatenatedPayloads += \"\\n\" + newText;\n    context.set(\"concatenatedPayloads\", concatenatedPayloads);\n}\n// 10秒間のメッセージ受信処理\nif (!active) {\n    active = true;\n    context.set(\"active\", active);\n    timeout = setTimeout(function () {\n        let now_concatenatedPayloads = context.get(\"concatenatedPayloads\")\n        node.send({ payload: now_concatenatedPayloads });\n        active = false;\n        concatenatedPayloads = \"\";\n        context.set(\"active\", active);\n        context.set(\"concatenatedPayloads\", concatenatedPayloads);\n    }, 9000);\n    context.set(\"timeout\", timeout);\n}\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1270,
+        "y": 380,
+        "wires": [
+            [
+                "61d3fbbc0eceb0b0",
+                "f0d8882296a9f5d4"
+            ]
+        ]
+    },
+    {
+        "id": "2d6d811d87ffe911",
+        "type": "debug",
+        "z": "8fe091d38d855dd7",
+        "name": "question",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1840,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "61d3fbbc0eceb0b0",
+        "type": "gpt4-api",
+        "z": "8fe091d38d855dd7",
+        "name": "GPT-4 API",
+        "system_message": "あなたはプロのコンサルタントです。以下の情報はすべて、公式サイトから集めてきた確定情報です。ただし、重複していたり、情報が古い場合があり、順不同で並んでいます。それぞれの情報を時系列毎に整理し、最も最新と思われるものを箇条書きで出力してください。。",
+        "model": "gpt-3.5-turbo",
+        "topic": "gpt",
+        "temperature": "1",
+        "top_p": "0.1",
+        "max_tokens": "0",
+        "stream": false,
+        "presence_penalty": "0",
+        "frequency_penalty": "0",
+        "logit_bias": "",
+        "stop": "",
+        "x": 1610,
+        "y": 440,
+        "wires": [
+            [
+                "2d6d811d87ffe911",
+                "aa3afe5656598c47"
+            ]
+        ]
+    },
+    {
+        "id": "f0d8882296a9f5d4",
+        "type": "debug",
+        "z": "8fe091d38d855dd7",
+        "name": "question",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1500,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "b833dce5c52159f4",
+        "type": "debug",
+        "z": "8fe091d38d855dd7",
+        "name": "output",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 2090,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "44f32e84aa0c5154",
+        "type": "gpt4-api",
+        "z": "8fe091d38d855dd7",
+        "name": "GPT-4 API",
+        "system_message": "あなたはプロのコンサルタントです。以下のWikipedia記事の一部から、最新の情報であなたの学習データに存在しない情報のみを箇条書きで抜粋してください。データ量を圧縮したいため、不要な内容は削減してください。あなたが知っている情報ばかりだったり、2020年以降と思わしき情報が無い場合は、返答不要です。\n\n出力フォーマットは、以下のようにすべて箇条書きです。\n\nif(既知の情報のみの場合 or 最新情報が無い場合) {\n私はこの内容をすべて知っています。\n}\nelse {\n{記事のタイトル}に関して私が未知の情報は次の通りです。\n・情報１\n・情報２\n}",
+        "model": "gpt-3.5-turbo",
+        "topic": "gpt",
+        "temperature": "1",
+        "top_p": "1",
+        "max_tokens": "0",
+        "stream": false,
+        "presence_penalty": "0",
+        "frequency_penalty": "0",
+        "logit_bias": "",
+        "stop": "",
+        "x": 1750,
+        "y": 660,
+        "wires": [
+            [
+                "5fb247dbbc056289"
+            ]
+        ]
+    },
+    {
+        "id": "aa3afe5656598c47",
+        "type": "function",
+        "z": "8fe091d38d855dd7",
+        "name": "Make question",
+        "func": "if (msg.topic === \"question\") {\n    context.set('question', msg.payload);\n    return null;\n}\nlet question = context.get('question') || \"\";\nconst content = msg.payload || '';\nnode.log(question);\n\nmsg.system_message = `\nあなたは、優秀なチャットボットです。ユーザーからの質問に答えてください。ただし、ユーザーはあなたの学習データに無い最新の内容を聞いてくる場合があります。その場合、以下の情報を参考にしてください。\n` + msg.payload;\nmsg.payload = `Question：` + question + `\nAnswer:\n`;\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1460,
+        "y": 80,
+        "wires": [
+            [
+                "d8b52cfdeaeced22"
+            ]
+        ]
+    },
+    {
+        "id": "d8b52cfdeaeced22",
+        "type": "gpt4-api",
+        "z": "8fe091d38d855dd7",
+        "name": "GPT-4 API",
+        "system_message": "あなたはプロのコンサルタントです。以下の情報はすべて、公式サイトから集めてきた確定情報です。ただし、重複していたり、情報が古い場合があり、順不同で並んでいます。それぞれの情報を時系列毎に整理し、最も最新と思われるものを箇条書きで出力してください。。",
+        "model": "gpt-3.5-turbo",
+        "topic": "gpt",
+        "temperature": "1",
+        "top_p": "1",
+        "max_tokens": "0",
+        "stream": false,
+        "presence_penalty": "0",
+        "frequency_penalty": "0",
+        "logit_bias": "",
+        "stop": "",
+        "x": 1670,
+        "y": 80,
+        "wires": [
+            [
+                "87b80a9e9ff53e8d"
+            ]
+        ]
+    },
+    {
+        "id": "87b80a9e9ff53e8d",
+        "type": "debug",
+        "z": "8fe091d38d855dd7",
+        "name": "Answer",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1860,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "9a562bf143ee4948",
+        "type": "debug",
+        "z": "8fe091d38d855dd7",
+        "name": "question",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1940,
+        "y": 940,
+        "wires": []
+    }
+]
