@@ -15,8 +15,40 @@
         <label for="node-input-topic"><i class="icon-tag"></i> Topic</label>
         <input type="text" id="node-input-topic" placeholder="Topic">
     </div>
+        </div>
+        <div class="form-row">
+        <label for="node-input-temperature"><i class="icon-tag"></i> Temperature</label>
+        <input type="number" id="node-input-temperature" placeholder="Temperature" min="0" step="0.01" value="1">
+    </div>
+    <div class="form-row">
+        <label for="node-input-top_p"><i class="icon-tag"></i> Top P</label>
+        <input type="number" id="node-input-top_p" placeholder="Top P" min="0" step="0.01" value="1">
+    </div>
+    <div class="form-row">
+        <label for="node-input-max_tokens"><i class="icon-tag"></i> Max Tokens</label>
+        <input type="number" id="node-input-max_tokens" placeholder="Max Tokens" min="1" value="8048">
+    </div>
+    <div class="form-row">
+        <label for="node-input-stream"><i class="icon-tag"></i> Stream</label>
+        <input type="checkbox" id="node-input-stream">
+    </div>
+    <div class="form-row">
+        <label for="node-input-presence_penalty"><i class="icon-tag"></i> Presence Penalty</label>
+        <input type="number" id="node-input-presence_penalty" placeholder="Presence Penalty" min="0" step="0.01" value="0">
+    </div>
+    <div class="form-row">
+        <label for="node-input-frequency_penalty"><i class="icon-tag"></i> Frequency Penalty</label>
+        <input type="number" id="node-input-frequency_penalty" placeholder="Frequency Penalty" min="0" step="0.01" value="0">
+    </div>
+    <div class="form-row">
+        <label for="node-input-logit_bias"><i class="icon-tag"></i> Logit Bias</label>
+        <input type="text" id="node-input-logit_bias" placeholder="Logit Bias">
+    </div>
+    <div class="form-row">
+        <label for="node-input-stop"><i class="icon-tag"></i> Stop</label>
+        <input type="text" id="node-input-stop" placeholder="Stop">
+    </div>
 </script>
-
 <script type="text/javascript">
     RED.nodes.registerType("gpt4-api", {
         category: "function",
@@ -24,8 +56,16 @@
         defaults: {
             name: { value: "" },
             system_message: { value: "" },
-            model: { value: "" },
+            model: { value: "gpt-3.5-turbo" },
             topic: { value: "" },
+            temperature: { value: 1 },
+            top_p: { value: 1 },
+            max_tokens: { value: 8048 },
+            stream: { value: false },
+            presence_penalty: { value: 0 },
+            frequency_penalty: { value: 0 },
+            logit_bias: { value: null },
+            stop: { value: null },
         },
         inputs: 1,
         outputs: 1,
@@ -35,15 +75,31 @@
         },
         oneditprepare: function () {
             $("#node-input-name").val(this.name);
-            $("#node-input-system_message").val(this.system_message);
-            $("#node-input-model").val(this.model);
-            $("#node-input-topic").val(this.topic);
+            $("#node-input-system_message").val(this.system_message || "You are a chatbot");
+            $("#node-input-model").val(this.model || "gpt-3.5-turbo");
+            $("#node-input-topic").val(this.topic || "gpt");
+            $("#node-input-temperature").val(this.temperature || 1);
+            $("#node-input-top_p").val(this.top_p || 1);
+            $("#node-input-max_tokens").val(this.max_tokens || 8048);
+            $("#node-input-stream").prop("checked", this.stream || false);
+            $("#node-input-presence_penalty").val(this.presence_penalty || 0);
+            $("#node-input-frequency_penalty").val(this.frequency_penalty || 0);
+            $("#node-input-logit_bias").val(this.logit_bias || '');
+            $("#node-input-stop").val(this.stop || '');
         },
         oneditsave: function () {
             this.name = $("#node-input-name").val();
             this.system_message = $("#node-input-system_message").val();
             this.model = $("#node-input-model").val();
             this.topic = $("#node-input-topic").val();
+            this.temperature = $("#node-input-temperature").val();
+            this.top_p = $("#node-input-top_p").val();
+            this.max_tokens = $("#node-input-max_tokens").val();
+            this.stream = $("#node-input-stream").prop("checked");
+            this.presence_penalty = $("#node-input-presence_penalty").val();
+            this.frequency_penalty = $("#node-input-frequency_penalty").val();
+            this.logit_bias = $("#node-input-logit_bias").val();
+            this.stop = $("#node-input-stop").val();
         },
     });
 </script>

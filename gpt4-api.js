@@ -17,6 +17,14 @@ module.exports = function (RED) {
             const api_key = node.context().global.get('gpt4_api_key');
             const model = config.model;
             msg.topic = config.topic;
+            const temperature = config.temperature;
+            const top_p = config.top_p;
+            const max_tokens = config.max_tokens;
+            const stream = config.stream;
+            const presence_penalty = config.presence_penalty;
+            const frequency_penalty = config.frequency_penalty;
+            const logit_bias = config.logit_bias;
+            const stop = config.stop;
 
             const proxyConfig = httpsProxy || httpProxy;
             const agent = proxyConfig ? new HttpsProxyAgent(proxyConfig) : null;
@@ -33,8 +41,23 @@ module.exports = function (RED) {
                 "messages": [
                     { "role": "system", "content": system_message },
                     { "role": "user", "content": input_message }
-                ]
+                ],
+                "temperature": parseFloat(temperature),
+                "top_p": parseFloat(top_p),
+                "n": 1,
+                "max_tokens": parseInt(max_tokens),
+                "stream": JSON.parse(stream),
+                "presence_penalty": parseFloat(presence_penalty),
+                "frequency_penalty": parseFloat(frequency_penalty),
             };
+
+            if (logit_bias) {
+                requestData["logit_bias"] = JSON.parse(logit_bias);
+            }
+
+            if (stop) {
+                requestData["stop"] = JSON.parse(stop);
+            }
 
             instance.post('', requestData)
                 .then(function (response) {
@@ -42,8 +65,6 @@ module.exports = function (RED) {
                     node.send(msg);
                 })
                 .catch(function (error) {
-                    node.warn(api_key);
-                    node.warn("error");
                     node.error(error);
                 });
         });
