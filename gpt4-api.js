@@ -68,14 +68,10 @@ module.exports = function (RED) {
                     msg.system_message = "";
 
                     // Add the user message and system response to chat_history
-                    if (!msg.chat_history) {
-                        msg.chat_history = [
-                            { "role": "system", "content": system_message },
-                            { "role": "user", "content": input_message },
-                        ];
-                    } else {
-                        msg.chat_history.push({ "role": "user", "content": input_message });
-                    }
+                    msg.chat_history = [
+                        { "role": "system", "content": system_message },
+                        { "role": "user", "content": input_message },
+                    ];
                     msg.chat_history.push({ "role": "assistant", "content": msg.payload });
 
                     node.send(msg);
