@@ -1,7 +1,7 @@
 # 概要
 msg.payloadから質問を読み取り、msg.payloadに出力する見た目通りのノードです。
 
-モデルをノードのconfigで設定できるので、gpt-3.5.turboでも使えます。たぶん、gpt-4の8k以上にも対応可能です。
+モデルをノードのconfigで設定できるので、gpt-3.5.turboでも使えます。
 
 ## Node-REDのインストールと実行方法
 Windows、Linux、Macそれぞれの環境でNode-REDをインストールし、実行する手順を説明します。
