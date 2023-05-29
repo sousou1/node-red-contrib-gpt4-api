@@ -1,10 +1,9 @@
+const https = require('https');
+const HttpProxyAgent = require('http-proxy-agent');
+const HttpsProxyAgent = require('https-proxy-agent');
+const { setServers } = require('dns');
+
 module.exports = function (RED) {
-    const axios = require('axios');
-
-    // for proxy
-    const HttpProxyAgent = require('http-proxy-agent');
-    const HttpsProxyAgent = require('https-proxy-agent');
-
     function GPT4APINode(config) {
         RED.nodes.createNode(this, config);
         const httpProxy = process.env.HTTP_PROXY || process.env.http_proxy;
@@ -29,12 +28,16 @@ module.exports = function (RED) {
             const proxyConfig = httpsProxy || httpProxy;
             const agent = proxyConfig ? new HttpsProxyAgent(proxyConfig) : null;
 
-            const instance = axios.create({
-                baseURL: 'https://api.openai.com/v1/chat/completions',
-                headers: { 'Authorization': 'Bearer ' + api_key },
-                httpsAgent: agent,
-                proxy: false
-            });
+            const options = {
+                hostname: 'api.openai.com',
+                path: '/v1/chat/completions',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + api_key
+                },
+                agent: agent
+            };
 
             const requestData = {
                 "model": model,
@@ -62,23 +65,96 @@ module.exports = function (RED) {
                 requestData["stop"] = JSON.parse(stop);
             }
 
-            instance.post('', requestData)
-                .then(function (response) {
-                    msg.payload = response.data.choices[0].message.content;
-                    msg.system_message = "";
+            const req = https.request(options, (res) => {
+                if (JSON.parse(stream)) {
+                    let chunks = [];
+                    let all_contents = "";
+                
+                    res.on('data', (chunk) => {
+                        chunks.push(chunk);
+                        let text = Buffer.concat(chunks).toString();
+                        let split = text.split('\n');
+                
+                        while (split.length > 1) {
+                            let jsonStr = split.shift();
+                            if(jsonStr){
+                                // Remove the "data: " prefix
+                                jsonStr = jsonStr.replace("data: ", "");
+                                try {
+                                    if(jsonStr.trim() == "[DONE]"){
+                                        let outMsg = Object.assign({}, msg, {
+                                            payload: "",
+                                            all_contents: all_contents,
+                                            chat_history: [
+                                                { "role": "system", "content": system_message },
+                                                { "role": "user", "content": input_message },
+                                                { "role": "assistant", "content": all_contents }
+                                            ],
+                                            chat_done: true
+                                        });
+                                        node.send(outMsg);
+                                    } else {
+                                        let parsedData = JSON.parse(jsonStr);
+                                        
+                                        if (parsedData.choices[0].delta.content) {                                        
+                                            let content = parsedData.choices[0].delta.content;
+                                            all_contents += content;
+                                            if(content){
+                                                let outMsg = Object.assign({}, msg, {
+                                                    payload: content,
+                                                    all_contents: all_contents,
+                                                    chat_history: [
+                                                        { "role": "system", "content": system_message },
+                                                        { "role": "user", "content": input_message },
+                                                        { "role": "assistant", "content": all_contents }
+                                                    ],
+                                                    chat_done: false
+                                                });
+                                                node.send(outMsg);
+                                            }
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.log('Error parsing: ' + jsonStr);
+                                }
+                            }
+                        }
+                        chunks = [Buffer.from(split[0])];
+                    });
+                } else {
+                    let data = '';
 
-                    // Add the user message and system response to chat_history
-                    msg.chat_history = [
-                        { "role": "system", "content": system_message },
-                        { "role": "user", "content": input_message },
-                    ];
-                    msg.chat_history.push({ "role": "assistant", "content": msg.payload });
+                    res.on('data', (chunk) => {
+                        data += chunk;
+                    });
 
-                    node.send(msg);
-                })
-                .catch(function (error) {
-                    node.error(error);
-                });
+                    res.on('end', () => {
+                        let parsedData = JSON.parse(data);
+
+                        if (parsedData.choices) {
+                            let content = parsedData.choices[0].message.content;
+                            let outMsg = Object.assign({}, msg, {
+                                payload: content,
+                                all_contents: content,
+                                chat_history: [
+                                    { "role": "system", "content": system_message },
+                                    { "role": "user", "content": input_message },
+                                    { "role": "assistant", "content": content }
+                                ],
+                                chat_done: true
+                            });
+                            node.send(outMsg);
+                        }
+                    });
+                }
+            });
+
+            req.on('error', (error) => {
+                node.error(error);
+            });
+
+            req.write(JSON.stringify(requestData));
+            req.end();
         });
     }
 

@@ -1,5 +1,5 @@
 module.exports = function (RED) {
-    const axios = require('axios');
+    const https = require('https');
     const HttpProxyAgent = require('http-proxy-agent');
     const HttpsProxyAgent = require('https-proxy-agent');
 
@@ -10,7 +10,18 @@ module.exports = function (RED) {
         let node = this;
 
         node.on('input', function (msg) {
-            const input_message = msg.payload;
+            if (!msg.hasOwnProperty('chat_done') || !msg.chat_done) {
+                return;  // `msg.chat_done`が存在しないか、`true`以外の場合は何もせずに処理を終了
+            }
+            let input_message;
+
+            if (msg.chat_done === true) {
+                if (msg.payload === "" || msg.payload === null || msg.payload === undefined) {
+                    input_message = msg.all_contents;
+                } else {
+                    input_message = msg.payload;
+                }
+            }
             const api_key = node.context().global.get('gpt4_api_key');
             const model = config.model;
             msg.topic = config.topic;
@@ -26,17 +37,18 @@ module.exports = function (RED) {
             const proxyConfig = httpsProxy || httpProxy;
             const agent = proxyConfig ? new HttpsProxyAgent(proxyConfig) : null;
 
-            const instance = axios.create({
-                baseURL: 'https://api.openai.com/v1/chat/completions',
-                headers: { 'Authorization': 'Bearer ' + api_key },
-                httpsAgent: agent,
-                proxy: false
-            });
+            const options = {
+                hostname: 'api.openai.com',
+                path: '/v1/chat/completions',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + api_key
+                },
+                agent: agent
+            };
 
-            // Use chat_history as messages if available, otherwise use the system message
             const messages = msg.chat_history;
-
-            // Add user message to messages
             messages.push({ "role": "user", "content": input_message });
 
             const requestData = {
@@ -62,22 +74,92 @@ module.exports = function (RED) {
                 requestData["stop"] = JSON.parse(stop);
             }
 
-            instance.post('', requestData)
-                .then(function (response) {
-                    const output_message = response.data.choices[0].message.content;
-                    msg.payload = output_message;
+            const req = https.request(options, (res) => {
+                if (JSON.parse(stream)) {
+                    let chunks = [];
+                    let all_contents = "";
+                
+                    res.on('data', (chunk) => {
+                        chunks.push(chunk);
+                        let text = Buffer.concat(chunks).toString();
+                        let split = text.split('\n');
+                
+                        while (split.length > 1) {
+                            let jsonStr = split.shift();
+                            if(jsonStr){
+                                // Remove the "data: " prefix
+                                jsonStr = jsonStr.replace("data: ", "");
 
-                    // Add system response to chat history and update msg.chat_history
-                    messages.push({ "role": "assistant", "content": output_message });
-                    msg.chat_history = messages;
+                                try {
+                                    if(jsonStr.trim() == "[DONE]"){
+                                        let copy_messages = Array.from(messages);
+                                        copy_messages.push({ "role": "assistant", "content": all_contents });
+                                        let outMsg = Object.assign({}, msg, {
+                                            payload: "",
+                                            all_contents: all_contents,
+                                            chat_history: copy_messages,
+                                            chat_done: true
+                                        });
+                                        node.send(outMsg);
+                                    } else {
+                                        let parsedData = JSON.parse(jsonStr);
+                                        
+                                        if (parsedData.choices[0].delta.content) {                                        
+                                            let content = parsedData.choices[0].delta.content;
+                                            all_contents += content;
+                                            let copy_messages = Array.from(messages);
+                                            copy_messages.push({ "role": "assistant", "content": all_contents });
+                                            if(content){
+                                                let outMsg = Object.assign({}, msg, {
+                                                    payload: content,
+                                                    all_contents: all_contents,
+                                                    chat_history: copy_messages,
+                                                    chat_done: false
+                                                });
+                                                node.send(outMsg);
+                                            }
+                                        }
+                                    }
+                                } catch (e) {
+                                    console.log('Error parsing: ' + jsonStr);
+                                }
+                            }
+                        }
+                        chunks = [Buffer.from(split[0])];
+                    });
+                } else {
+                    let data = '';
 
-                    node.send(msg);
-                })
-                .catch(function (error) {
-                    node.error(error);
-                });
+                    res.on('data', (chunk) => {
+                        data += chunk;
+                    });
+
+                    res.on('end', () => {
+                        let parsedData = JSON.parse(data);
+
+                        if (parsedData.choices) {
+                            let content = parsedData.choices[0].message.content;
+                            messages.push({ "role": "assistant", "content": content });
+                            let outMsg = Object.assign({}, msg, {
+                                payload: content,
+                                all_contents: content,
+                                chat_history: messages,
+                                chat_done: true
+                            });
+                            node.send(outMsg);
+                        }
+                    });
+                }
+            });
+
+            req.on('error', (error) => {
+                node.error(error);
+            });
+
+            req.write(JSON.stringify(requestData));
+            req.end();
         });
     }
-
+    
     RED.nodes.registerType('continue-gpt4-api', ContinueGPT4APINode);
 };
