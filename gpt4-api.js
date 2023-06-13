@@ -10,7 +10,8 @@ module.exports = function (RED) {
         const httpsProxy = process.env.HTTPS_PROXY || process.env.https_proxy;
         let node = this;
 
-        node.on('input', function (msg) {
+        node.on('input', function (msg, send, done) { // "done" has been added here
+            send = send || function() { node.send.apply(node,arguments) }
             const input_message = msg.payload;
             const system_message = msg.system_message || config.system_message;
             const api_key = node.context().global.get('gpt4_api_key');
@@ -82,17 +83,16 @@ module.exports = function (RED) {
                                 jsonStr = jsonStr.replace("data: ", "");
                                 try {
                                     if(jsonStr.trim() == "[DONE]"){
-                                        let outMsg = Object.assign({}, msg, {
-                                            payload: "",
-                                            all_contents: all_contents,
-                                            chat_history: [
-                                                { "role": "system", "content": system_message },
-                                                { "role": "user", "content": input_message },
-                                                { "role": "assistant", "content": all_contents }
-                                            ],
-                                            chat_done: true
-                                        });
-                                        node.send(outMsg);
+                                        msg.payload = "";
+                                        msg.all_contents = all_contents;
+                                        msg.chat_history = [
+                                            { "role": "system", "content": system_message },
+                                            { "role": "user", "content": input_message },
+                                            { "role": "assistant", "content": all_contents }
+                                        ];
+                                        msg.chat_done = true;
+                                        send(msg); 
+                                        done();
                                     } else {
                                         let parsedData = JSON.parse(jsonStr);
                                         
@@ -100,17 +100,16 @@ module.exports = function (RED) {
                                             let content = parsedData.choices[0].delta.content;
                                             all_contents += content;
                                             if(content){
-                                                let outMsg = Object.assign({}, msg, {
-                                                    payload: content,
-                                                    all_contents: all_contents,
-                                                    chat_history: [
-                                                        { "role": "system", "content": system_message },
-                                                        { "role": "user", "content": input_message },
-                                                        { "role": "assistant", "content": all_contents }
-                                                    ],
-                                                    chat_done: false
-                                                });
-                                                node.send(outMsg);
+                                                msg.payload = content;
+                                                msg.all_contents = all_contents;
+                                                msg.chat_history = [
+                                                    { "role": "system", "content": system_message },
+                                                    { "role": "user", "content": input_message },
+                                                    { "role": "assistant", "content": all_contents }
+                                                ];
+                                                msg.chat_done = false;
+
+                                                send(msg); 
                                             }
                                         }
                                     }
@@ -133,17 +132,17 @@ module.exports = function (RED) {
 
                         if (parsedData.choices) {
                             let content = parsedData.choices[0].message.content;
-                            let outMsg = Object.assign({}, msg, {
-                                payload: content,
-                                all_contents: content,
-                                chat_history: [
-                                    { "role": "system", "content": system_message },
-                                    { "role": "user", "content": input_message },
-                                    { "role": "assistant", "content": content }
-                                ],
-                                chat_done: true
-                            });
-                            node.send(outMsg);
+                            msg.payload = content;
+                            msg.all_contents = content;
+                            msg.chat_history = [
+                                { "role": "system", "content": system_message },
+                                { "role": "user", "content": input_message },
+                                { "role": "assistant", "content": content }
+                            ];
+                            msg.chat_done = true;
+
+                            send(msg);
+                            done();
                         }
                     });
                 }
@@ -151,6 +150,7 @@ module.exports = function (RED) {
 
             req.on('error', (error) => {
                 node.error(error);
+                done(error);
             });
 
             req.write(JSON.stringify(requestData));
