@@ -60,7 +60,14 @@ Node-REDを再起動して、左側のノード一覧に`gpt4-api`が出てく�
 ## gpt4-apiノードの使い方
 まず、node-redの設定にapi_keyを設定します。
 
-API-KEYを https://platform.openai.com/account/api-keys から取得し、なんらかのテキストエディタで`~/.node-red/settings.js`を開きます。デフォルトだと460行目くらいの`functionGlobalContext: {`の下に一行api_keyの行を追加し、
+API-KEYを https://platform.openai.com/account/api-keys から取得します。設定の記述方法は二種類あります。どちらも設定した場合は環境変数が優先されます。
+
+#### 環境変数で設定する
+OPENAI_API_KEY="xxxx"というように環境変数を設定することで、それを取得します。
+
+#### node-redの変数に設定する
+
+なんらかのテキストエディタで`~/.node-red/settings.js`を開きます。デフォルトだと460行目くらいの`functionGlobalContext: {`の下に一行api_keyの行を追加し、
 ```
 functionGlobalContext: {
         gpt4_api_key: "apiキーを書いて""で囲む"

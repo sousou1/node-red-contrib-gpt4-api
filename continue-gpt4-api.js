@@ -22,7 +22,7 @@ module.exports = function (RED) {
                     input_message = msg.payload;
                 }
             }
-            const api_key = node.context().global.get('gpt4_api_key');
+            const api_key = process.env.OPENAI_API_KEY || node.context().global.get('gpt4_api_key');
             const model = config.model;
             msg.topic = config.topic;
             const temperature = config.temperature;
